@@ -56,6 +56,9 @@ T,0.01,0.02,0.00,0.01
 ```
 The fields correspond to three voltage measurement ranges, and the measured current.
 
+### '$M'
+The '$M' command is used for manual PWM control. This mode disables constant current control as with normal tests. '$M' will begin a discharge, at the default PWM start value. Use '+' and '-' to adjust the PWM value up and down. You can use '$E' as normally to end a manual discharge.
+
 ## GUI Application
 Further information on using the GUI application is available in the user manual document. In summary, the steps using the GUI application will involve selecting the analyzer serial device from the drop down, setting the cutoff voltage and discharge current, and pressing the START button. There are tick boxes to enable plotting Voltage, Current, and Capacity, and fields to enter integer values for the chart vertical extents. Additionally, there are buttons to export a image capture of the chart, and to export the data as a CSV file. These files will be placed in the same directory the application is running from.
 
