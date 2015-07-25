@@ -2,10 +2,10 @@
 #define BAUD_PRESCALE (((F_CPU / (BAUD_RATE * 16UL))) - 1)
 
 #define Hardware_Version "1.2"
-#define Software_Version "1.2"
+#define Software_Version "1.3"
 #define Description "NWKits Battery Analyzer"
 
-#define V_Cal 3.252
+#define V_Cal 3.279
 
 #define V_Low_Pin A4
 #define V_Low_Div 0.2040816327
@@ -143,6 +143,28 @@ void loop(){
     analogWrite(Mosfet_PWM_Pin, Set_PWM);
   }
   
+  if(test_started == 2){
+    // Flip our test running LED
+    digitalWrite(LED_Green, !digitalRead(LED_Green));
+    
+    // Get the current info
+    get_current();
+    get_voltage();
+    
+    // Integrate the current if it's not idling
+    if(Current > 0.02){
+      Capacity = Capacity + (0.00027777777 * Current); // Multiply the current by the fraction of an hour represented by one second to add to the amp hour reading
+    }else{
+      Current = 0.0;
+    }
+  
+    // Print out our current sample
+    print_data_sample();
+ 
+    // Check to see if we've hit the cutoff voltage on two concurrent samples
+    if(Voltage < Set_Voltage && get_voltage() < Set_Voltage){ finish(); }
+  }
+  
   // Wait one second before we start again
   while(millis() < (last_time + 1000)){};
 }
@@ -170,6 +192,11 @@ void check_command(){
       case 'B':
         // This is a "$B" command. Start the discharge.
         start();
+        return;
+      case 'M':
+        // This is a "$M" command. Start a manual discharge.
+        start();
+        test_started = 2;
         return;
       case 'E':
         // This is a "$E" command. End the discharge.
@@ -207,6 +234,18 @@ void check_command(){
         set_parameters(v_in, i_in);
         return;
     }
+  }
+  
+  // Use + and - to manually adjust PWM value
+  if(Console_Input[0] == '+'){
+    Set_PWM = Set_PWM + 1;
+    analogWrite(Mosfet_PWM_Pin, Set_PWM);
+    return;
+  }
+  if(Console_Input[0] == '-'){
+    Set_PWM = Set_PWM - 1;
+    analogWrite(Mosfet_PWM_Pin, Set_PWM);
+    return;
   }
   
   // If we get here, command parsing failed. Blink the error LED and print an error message if Console_Echo == 1.
